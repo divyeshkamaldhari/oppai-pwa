@@ -1,4 +1,4 @@
-name: Deploy PWA (connect-with-cometchat) to Hostinger (staging)
+name: Deploy PWA (pwa) to Hostinger (staging)
 
 on:
   push:
@@ -95,7 +95,7 @@ jobs:
           ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "$USER@$HOST" "mkdir -p '$TARGET_BUILD_PATH' && echo 'remote path ensured: $TARGET_BUILD_PATH'"
         shell: bash
 
-      - name: Rsync build folder to remote (connect-with-cometchat)
+      - name: Rsync build folder to remote (brook-child)
         run: |
           # if your built folder is `build/` in repo root — use that. If it's somewhere else, update the source path.
           SOURCE_BUILD="./build/"
@@ -117,7 +117,7 @@ jobs:
           echo "Build pushed to $USER@$HOST:$TARGET_BUILD_PATH"
           echo "PWA deployment pipeline passed."
         shell: bash
-name: Deploy PWA (connect-with-cometchat) to Hostinger (staging)
+name: Deploy PWA (pwa) to Hostinger (staging)
 
 on:
   push:
@@ -137,7 +137,7 @@ jobs:
       # SSH port (string)
       PORT_SECRET: "65002"
       #   ld will be copied
-      TARGET_BUILD_PATH: /home/u689060721/domains/lightsteelblue-dolphin-977863.hostingersite.com/public_html/wp-content/plugins/connect-with-cometchat/build
+      TARGET_BUILD_PATH: /home/u689060721/domains/lightsteelblue-dolphin-977863.hostingersite.com/public_html/wp-content/themes/brook-child/dist
 
     steps:
       - name: Checkout repository
@@ -214,7 +214,7 @@ jobs:
           ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "$USER@$HOST" "mkdir -p '$TARGET_BUILD_PATH' && echo 'remote path ensured: $TARGET_BUILD_PATH'"
         shell: bash
 
-      - name: Rsync build folder to remote (connect-with-cometchat)
+      - name: Rsync build folder to remote (pwd)
         run: |
           # if your built folder is `build/` in repo root — use that. If it's somewhere else, update the source path.
           SOURCE_BUILD="./build/"
