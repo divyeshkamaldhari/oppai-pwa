@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      HOST: ${{ secrets.HOSTINGER_HOST }} # 109.106.254.234
-      USER: ${{ secrets.HOSTINGER_USER }} # u689060721
-      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }}
+      HOST: ${{ secrets.HOSTINGER_HOST_STAGING }} # 109.106.254.234
+      USER: ${{ secrets.HOSTINGER_USER_STAGING }} # u689060721
+      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY_STAGING }}
       PORT_SECRET: "65002"
 
       # PWA will be copied to this remote folder
@@ -22,7 +22,7 @@ jobs:
       # Put the base64 single-line of your .env into repo secret PWA_ENV_B64
       # If you used repository variables, workflow will fallback to vars.PWA_ENV_B64
       # (but secrets are strongly recommended)
-      PWA_ENV_B64_SECRET: ${{ secrets.PWA_ENV_B64 }}
+      PWA_ENV_B64_SECRET: ${{ secrets.PWA_ENV_B64_STAGING }}
       PWA_ENV_B64_VAR: ${{ vars.PWA_ENV_B64 }}
 
     steps:
