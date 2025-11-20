@@ -134,7 +134,7 @@ name: Build & Deploy PWA (staging/production)
 
 on:
   push:
-    branches: [staging] #, production]
+    branches: [staging, production]
   workflow_dispatch:
 
 defaults:
