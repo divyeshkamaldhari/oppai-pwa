@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      HOST: ${{ secrets.HOSTINGER_HOST_STAGING }} # 109.106.254.234
-      USER: ${{ secrets.HOSTINGER_USER_STAGING }} # u689060721
-      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY_STAGING }}
+      HOST: ${{ secrets.HOSTINGER_HOST }} # 109.106.254.234
+      USER: ${{ secrets.HOSTINGER_USER }} # u689060721
+      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }}
       PORT_SECRET: "65002"
 
       # PWA will be copied to this remote folder
@@ -22,8 +22,8 @@ jobs:
       # Put the base64 single-line of your .env into repo secret PWA_ENV_B64
       # If you used repository variables, workflow will fallback to vars.PWA_ENV_B64
       # (but secrets are strongly recommended)
-      PWA_ENV_B64_SECRET: ${{ secrets.PWA_ENV_B64_STAGING }}
-      # PWA_ENV_B64_VAR: ${{ vars.PWA_ENV_B64 }}
+      PWA_ENV_B64_SECRET: ${{ secrets.PWA_ENV_B64 }}
+      PWA_ENV_B64_VAR: ${{ vars.PWA_ENV_B64 }}
 
     steps:
       - name: Checkout repository
@@ -35,7 +35,6 @@ jobs:
         run: |
           echo "Repo root:"
           ls -lah
-
       - name: Resolve & decode .env (from secret → fallback var)
         run: |
           set -euo pipefail
@@ -45,25 +44,20 @@ jobs:
             echo "Secret PWA_ENV_B64 not found; checking repository variable PWA_ENV_B64..."
             ENV_B64="${{ vars.PWA_ENV_B64 }}"
           fi
-
           if [ -z "$ENV_B64" ]; then
             echo "ERROR: No PWA_ENV_B64 provided (secret or repo variable). If .env is optional, remove this check."
             exit 1
           fi
-
           # sanitize CRs
           CLEAN_ENV_B64=$(printf '%s' "$ENV_B64" | tr -d '\r')
-
           # safe sanity checks (length + hash), do NOT print decoded content
           echo "Decoded .env base64 length: $(printf '%s' "$CLEAN_ENV_B64" | wc -c) bytes"
           printf '%s' "$CLEAN_ENV_B64" | sha256sum | awk '{print "PWA_ENV_B64 sha256:", $1}'
-
           # validate basic base64 charset
           if ! printf '%s' "$CLEAN_ENV_B64" | grep -Eq '^[A-Za-z0-9+/]+={0,2}$'; then
             echo "ERROR: PWA_ENV_B64 contains invalid base64 characters. Recreate with: cat .env | base64 | tr -d '\\n'"
             exit 1
           fi
-
           # decode to .env in repo root (overwrite if exists)
           printf '%s' "$CLEAN_ENV_B64" | base64 --decode > .env
           chmod 600 .env
@@ -134,92 +128,3 @@ jobs:
         run: |
           echo "PWA deployed to $USER@$HOST:$TARGET_BUILD_PATH"
         shell: bash
-
-
-
-
-# name: Deploy PWA — Staging
-
-# on:
-#   push:
-#     branches: [staging]
-#   workflow_dispatch:
-
-# jobs:
-#   build-and-deploy-pwa-staging:
-#     runs-on: ubuntu-latest
-
-#     env:
-#       HOST: ${{ secrets.HOSTINGER_HOST_STAGING }}                # staging host (e.g. 109.106.254.234)
-#       USER: ${{ secrets.HOSTINGER_USER_STAGING }}                # staging user (e.g. u689060721)
-#       KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY_STAGING }}          # base64 private key for staging
-#       PORT_SECRET: "65002"
-#       TARGET_BUILD_PATH: ${{ secrets.HOSTINGER_STAGING_TARGET_PATH }}  # remote staging path
-#       PWA_ENV_B64: ${{ secrets.PWA_ENV_B64_STAGING }}            # base64 .env for staging
-
-#     steps:
-#       - name: Checkout repo
-#         uses: actions/checkout@v4
-#         with:
-#           fetch-depth: 0
-
-#       - name: Decode .env (staging)
-#         run: |
-#           set -euo pipefail
-#           if [ -z "${PWA_ENV_B64}" ]; then
-#             echo "ERROR: PWA_ENV_B64 (staging) secret missing"
-#             exit 1
-#           fi
-#           printf '%s' "${PWA_ENV_B64}" | tr -d '\r' | base64 --decode > .env
-#           chmod 600 .env
-#         shell: bash
-
-#       - name: Setup Node 21
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: "21"
-#           cache: "npm"
-
-#       - name: Install dependencies
-#         run: |
-#           test -f .env || (echo ".env missing; aborting" && exit 1)
-#           npm ci
-#         shell: bash
-
-#       - name: Build PWA
-#         run: |
-#           CI=false npm run build
-#           ls -lah ./dist || (echo "dist not found" && exit 1)
-#         shell: bash
-
-#       - name: Load SSH key (staging)
-#         run: |
-#           set -euo pipefail
-#           mkdir -p ~/.ssh
-#           CLEAN_B64=$(printf '%s' "$KEY_B64" | tr -d '\r')
-#           printf '%s' "$CLEAN_B64" | base64 --decode > ~/.ssh/id_rsa
-#           chmod 600 ~/.ssh/id_rsa
-#           eval "$(ssh-agent -s)"
-#           ssh-add ~/.ssh/id_rsa
-#           ssh-keyscan -p "${PORT_SECRET}" -H "$HOST" >> ~/.ssh/known_hosts || true
-#           echo "SSH key loaded."
-#         shell: bash
-
-#       - name: Ensure staging directory exists
-#         run: |
-#           ssh -p "${PORT_SECRET}" -o StrictHostKeyChecking=no "${USER}@${HOST}" "mkdir -p '${TARGET_BUILD_PATH}'"
-#         shell: bash
-
-#       - name: Rsync dist → staging
-#         run: |
-#           RSYNC_SSH="ssh -p ${PORT_SECRET} -o StrictHostKeyChecking=no"
-#           rsync -e "$RSYNC_SSH" -avz --delete ./dist/ "${USER}@${HOST}:${TARGET_BUILD_PATH}/"
-#         shell: bash
-
-#       - name: Cleanup .env
-#         run: |
-#           shred -u .env || rm -f .env || true
-#         shell: bash
-
-#       - name: Staging deployment complete
-#         run: echo "Staging deploy completed."
