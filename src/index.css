@@ -1,0 +1,408 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* START CUSTOM WEB FONTS */
+@font-face {
+    font-family: "Comic Sans MS";
+    src:
+        url("assets/fonts/Comic-Sans-MS/ComicSansMS.woff2") format("woff2"),
+        url("assets/fonts/Comic-Sans-MS/ComicSansMS.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+/* END CUSTOM WEB FONTS */
+
+/* START GLOBLE ROOT VARIABLES CODE */
+:root {
+    --accent-font: "Comic Sans MS";
+    --safe-area-top: env(safe-area-inset-top, 0px);
+}
+/* END GLOBLE ROOT VARIABLES CODE */
+
+* {
+    scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+}
+
+
+/* body, */
+html
+{
+  padding-top: var(--safe-area-top) !important;
+    @apply bg-black;
+}
+
+
+@layer base {
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+        -webkit-text-fill-color: white !important;
+        transition: background-color 5000s ease-in-out 0s;
+        background-color: transparent !important;
+    }
+
+    a[href^="tel"],
+    a[href^="mailto"] {
+        text-decoration: none !important;
+        color: inherit !important;
+    }
+
+    html {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -webkit-text-size-adjust: 100% !important;
+        touch-action: manipulation;
+    }
+}
+
+body {
+    @apply bg-black  /*bg-[#130C1E]; */;
+}
+
+@keyframes scalePulse {
+    0%,
+    100% {
+        transform: scale(0.7);
+    }
+    50% {
+        transform: scale(1);
+    }
+}
+
+.scale-pulse {
+    animation: scalePulse 1.5s ease-in-out infinite;
+}
+
+.ant-btn.ant-btn-primary {
+    @apply h-max w-full rounded-full !bg-[#CE2A42] px-5 py-3 !font-poppins text-base !capitalize font-semibold leading-8 hover:!bg-[#f41132] active:!bg-[#f41132] text-white border-none hover:!text-white [&_span]:!uppercase shadow-none;
+}
+
+.ant-btn.ant-btn-primary.pwa-btn-sm {
+    @apply min-h-[34px] py-1;
+}
+
+.ant-btn.ant-btn-primary.pwa-btn-sm.pwa-btn-gray-outline  {
+    @apply !bg-transparent shadow-none !border !border-[#959FAA] !border-solid !font-semibold text-[#959FAA];
+}
+
+.cometchat-root,
+p,
+li,
+a,
+span {
+    @apply font-poppins;
+}
+
+.pwa-container {
+    @apply w-full max-w-md;
+}
+
+.custom-site-logo {
+    @apply h-[39px] w-full max-w-[96px] object-contain;
+}
+
+.transition-pwa {
+    @apply transition-all duration-200 ease-in;
+}
+
+.pwa-back-btn-custom {
+    @apply cursor-pointer absolute top-1/2 -translate-y-1/2 left-[16px] w-[27px] h-[27px];
+}
+
+.pwa-back-btn-custom svg {
+    @apply h-full w-full object-contain;
+}
+
+.pwa-back-btn-custom svg .path-border {
+    @apply transition-all duration-300 ease-in;
+}
+.pwa-back-btn-custom:hover svg .path-border {
+    @apply opacity-100;
+}
+
+.pwa-text-red {
+    @apply font-poppins text-[#CE2A42];
+}
+
+.ant-spin-nested-loading {
+    @apply absolute left-0 bottom-0 w-full;
+}
+
+.ant-form-item-explain-error {
+    @apply !mb-3;
+}
+
+#agechecker-modal {
+    @apply !p-[10px] !pt-[45px];
+}
+
+#agechecker {
+    @apply !rounded-[21px];
+}
+
+#agechecker #ac-logo-container {
+    @apply !flex !items-center !justify-center;
+}
+
+#agechecker .ac-stripe {
+    @apply !bg-[#381D67] !hidden;
+}
+
+#agechecker video.ac-preview {
+    @apply !block;
+    /* display: block !important; */
+}
+
+#agechecker #ac-hide-button {
+    @apply !block;
+}
+
+body .uwy {
+    @apply !hidden;
+}
+
+/* START FORM ELEMENTS DESIGN CODE */
+
+.checkbox-field .ant-checkbox .ant-checkbox-inner {
+    @apply flex w-[22px] h-[22px] bg-transparent border border-white transition-all duration-300 ease-in-out;
+}
+
+.checkbox-field .ant-checkbox-wrapper:not(.ant-checkbox-wrapper-disabled):hover .ant-checkbox .ant-checkbox-inner {
+    @apply bg-[#1CBD43];
+}
+
+.checkbox-field .ant-checkbox.ant-checkbox-checked .ant-checkbox-inner {
+    @apply bg-[#1CBD43];
+}
+
+.checkbox-field .ant-checkbox .ant-checkbox-inner::after {
+    content: "";
+    @apply w-full h-full bg-no-repeat bg-center opacity-0 invisible border-0 inset-0;
+    background-image: url("/src/assets/white-check.png");
+    background-size: 54%;
+    transform: unset;
+}
+
+.checkbox-field .ant-checkbox.ant-checkbox-checked .ant-checkbox-inner::after {
+    @apply opacity-100 visible;
+}
+
+/* END FORM ELEMENTS DESIGN CODE */
+
+.comment-msg-wrapper {
+  @apply flex justify-center items-center flex-wrap content-center p-12 px-9 mb-[-40px] min-h-[167px];
+  background-image: url("/src/assets/cloud-doodle.png");
+  background-size: 100% 100%;
+  background-position: center;
+}
+
+.comment-msg-wrapper p {
+  @apply font-[Comic_Sans_MS] font-normal overflow-hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+.messages-wrapper .cometchat-message-composer input {
+    autocomplete: off !important;
+    autocorrect: off !important;
+    spellcheck: false !important;
+}
+
+/* START VIEW-ALL LINK DESIGN CODE */
+.view-all {
+  @apply inline-flex items-center;
+}
+
+.view-all::after {
+  content: '';
+  @apply relative block w-5 h-5 ml-2 transition-all duration-200 ease-in;
+  background-image: url("../public/assets/nev-next-red-transparent.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: brightness(0) invert(1);
+}
+
+.view-all:hover::after {
+  filter: brightness(1) invert(0);
+}
+
+/* END VIEW-ALL LINK DESIGN CODE */
+
+
+
+
+
+
+/* START TUTORIAL MODAL DESIGN CODE */
+.form-card-section .inner-card::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	right: 15px;
+	transform: translateY(-50%);
+	width: 37px;
+	height: 37px;
+	background-image: url("../public/assets/MyCollectionIcon-lg.png");
+	background-size: contain;
+	background-repeat: no-repeat;
+}
+/* END TUTORIAL MODAL DESIGN CODE */
+
+
+
+
+
+
+/* START BADGE BTN DESIGN CODE */
+.badge-btn {
+    @apply inline-flex items-center uppercase text-[12px] text-white font-medium px-[11px] py-[5px] rounded-full bg-[var(--secondary-accent)];
+
+}
+/* END BADGE BTN DESIGN CODE */
+
+
+
+
+
+
+/* START TOOLTIP DESIGN CODE */
+.pwa-tootltip.badge-btn {
+  @apply flex items-center gap-1 absolute px-2 top-[-26px] left-1/2 -translate-x-1/2;
+}
+
+.pwa-tootltip::after {
+  @apply content-[''] absolute left-1/2 translate-x-[-50%] w-3 h-3 bottom-[-12px] border-[6px] border-[var(--secondary-accent)] border-l-transparent border-r-transparent border-b-transparent;
+}
+
+.pwa-clock {
+  @apply inline-flex gap-[3px] ml-[4px];
+}
+
+.pwa-clock span {
+  @apply bg-[var(--primary-accent)] rounded-[6px] w-[21px] h-[21px] flex justify-center items-center text-[12px];
+}
+
+@media (max-width: 400px) {
+    .pwa-clock span {
+        @apply w-[18px] h-[18px] text-[11px];
+    }
+}
+
+@media (max-width: 400px) {
+    .pwa-title {
+      @apply text-[18px];
+    }
+}
+
+@media (max-width: 400px) {
+    .tl-class {
+      @apply text-[12px];
+    }
+}
+  
+/* END TOOLTIP DESIGN CODE */
+body.no-scroll {
+    overflow: hidden; /* disables scrolling */
+}
+
+.waifu-icon-doodle{
+    @apply relative pr-20;
+}
+
+.waifu-icon-doodle .waifu-icon {
+    @apply absolute right-0 bottom-0 max-w-[85px] h-[75px];
+}
+
+.waifu-icon-doodle .waifu-icon img {
+	@apply w-full h-full object-contain;
+}
+
+
+
+/* START ANIMATED BORDER BOX CARD DESIGN CODE */
+@property --degree {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 0deg;
+}
+
+.anim-border-box{
+    @apply p-[1px] relative;
+}
+
+.anim-border-box.anim-border-boxself {
+    @apply rounded-xl;
+}
+
+.anim-border-box.anim-border-boxself::before {
+    @apply rounded-xl;
+    background-image: conic-gradient(from var(--degree), #CE2A42 80%, #E0D1FF 88%, #E0D1FF 92%, #CE2A42 100%);
+}
+
+.anim-border-box::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: conic-gradient(from var(--degree), #381D6A 80%, #E0D1FF 88%, #E0D1FF 92%, #381D6A 100%);
+    --degree: 0deg;
+    opacity: 0;
+    visibility: hidden;
+}
+.anim-border-boxself.anim-border-box::before,
+.active-hotDeal.anim-border-box::before{
+    animation: rotation 3s linear infinite;
+    opacity: 1;
+    visibility: visible;
+}
+@keyframes rotation {
+  to {
+    --degree: 360deg;
+  }
+}
+
+
+.shine-doodle::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: -50%;
+	width: 50px;
+	height: 100%;
+	background-image: linear-gradient(to right,transparent,#ffffff29,#ffffff5c,#ffffff85,#ffffffc4,#fff,#ffffffc4,#ffffff85,#ffffff5c,#ffffff29,transparent);
+	transform: translate(-50%,-50%) skew(45deg);
+	opacity: 0;
+    visibility: hidden;
+}
+
+.shine-doodle> * {
+    @apply z-[1];
+}
+
+.active-hotDeal .shine-doodle::before {
+	opacity: 0.7;
+    visibility: visible;
+    animation: shineanim 4s linear infinite forwards;
+}
+
+@keyframes shineanim {
+    0%{
+       left: -50%;
+    }
+    100%{
+        left: 150%;
+    }
+}
+
+
+/* END ANIMATED BORDER BOX CARD DESIGN CODE */

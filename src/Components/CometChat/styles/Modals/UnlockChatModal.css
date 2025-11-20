@@ -1,0 +1,37 @@
+.cometchat-unlock-chat-modal-container {
+    @apply relative self-end h-auto w-full max-w-[calc(100%-16px)] pr-4;
+}
+
+.cometchat-unlock-chat-modal__image {
+    @apply absolute right-[-27px] bottom-0 z-[1] max-w-[223px] w-full flex items-end max-h-[340px];
+}
+
+.cometchat-unlock-chat-modal__image img {
+    @apply w-full h-full object-contain object-bottom;
+}
+
+.cometchat-unlock-chat-modal {
+    @apply flex flex-col justify-center bg-[#381D67] ml-auto text-white rounded-[21px] pl-[33px] pr-[140px] py-[33px] w-full h-full relative shadow-[0_8px_24px_rgba(0,0,0,0.3)];
+}
+
+.cometchat-unlock-chat-modal h3 {
+    @apply text-lg leading-[130%] mb-2 text-white font-semibold text-left w-[97%] max-w-[310px] overflow-hidden text-ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+}
+
+.cometchat-unlock-chat-modal p {
+    @apply mb-4 text-[#f5f5f5] font-normal text-xs text-left max-w-[97%] w-full overflow-hidden text-ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 8;
+    -webkit-box-orient: vertical;
+}
+
+.unlock-button-container {
+    @apply max-w-[176px] w-full;
+}
+
+.unlock-button {
+    @apply w-full transition-all duration-300 ease-in-out text-center !bg-[#CE2A42] rounded-full !border !border-[#CE2A42] cursor-pointer text-white font-semibold text-xs leading-[100%] !min-h-[34px] p-[9px] font-poppins hover:!bg-[#f41132];
+}

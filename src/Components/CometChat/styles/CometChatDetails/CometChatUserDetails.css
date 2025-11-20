@@ -1,0 +1,313 @@
+:root {
+    --background-color: #130c1e;
+    --primary-accent: #ce2a42;
+    --secondary-accent: #1cbd43;
+    --text-color: #ffffff;
+}
+
+.cometchat-user-details__header {
+    @apply relative flex min-h-[73px] items-center justify-center w-full self-stretch bg-[#130C1E] py-2 px-[22px];
+}
+
+.App .main-action-wrpr {
+    display: flex;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.App .cometchat-user-details__mute-toggle {
+    border-top: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+    border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+}
+
+.cometchat-user-details__mute-toggle {
+    width: 50% !important;
+    max-width: 50% !important;
+}
+
+.App .cometchat-list-item {
+    max-width: 62%;
+    overflow: hidden;
+    border-radius: 3px;
+}
+
+.oppai-dragon-comet-chat-user-actions {
+    width: 50%;
+}
+.cometchat-user-details__header-icon {
+    -webkit-mask: url("../../assets/close.svg") center center no-repeat;
+    background: var(--cometchat-icon-color-primary, #141414);
+    -webkit-mask-size: contain;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    transition: all 0.3s ease;
+}
+
+.cometchat-user-details__header-icon:hover {
+    background-color: #ce2a42;
+}
+
+/* .cometchat-user-details__header-icon:hover {
+    background: var(--cometchat-icon-color-highlight);
+} */
+
+.cometchat-user-details__header-text {
+    overflow: hidden;
+    color: var(--cometchat-text-color-primary, #141414);
+    text-overflow: ellipsis;
+    font: var(--cometchat-font-heading3-bold, 700 20px Roboto);
+}
+
+.cometchat-user-details__content {
+    @apply flex px-[22px] pt-0 max-h-[calc(100dvh-73px)] flex-col items-center gap-[35px] shrink-0 self-stretch bg-[#130C1E] h-full overflow-y-auto pb-[77px];
+}
+
+.cometchat-user-details__content-avatar {
+    @apply flex max-w-[257px] justify-center items-center shrink-0 rounded-full w-full relative;
+}
+.status-dot {
+    @apply absolute w-8 h-8 bg-[#00c853] rounded-full z-[1] top-[11px] right-[38px];
+}
+
+.cometchat-user-details__content-avatar .cometchat-avatar {
+    @apply w-full pt-[100%];
+}
+
+.cometchat-user-details__content-avatar img {
+    @apply absolute left-0 top-0 h-full w-full rounded-full object-contain;
+}
+
+.cometchat-user-details__content-title {
+    @apply text-[21px] font-normal text-[#CE2A42] overflow-hidden text-center text-ellipsis font-poppins leading-[100%];
+}
+
+.cometchat-user-details__bio-text {
+    @apply text-white text-xs leading-[140%] text-center font-poppins;
+}
+
+.pwa-cometchat-user-details__bio-subtext {
+    @apply text-[#959FAA] text-base font-poppins font-medium leading-[140%] text-center;
+}
+
+.bio-other-actions {
+    @apply flex flex-col w-full gap-[15px];
+}
+
+.cometchat-user-details__content-avatar .cometchat-avatar__text {
+    width: 257px;
+    height: 256px;
+    font: 700 64px/76.8px var(--cometchat-font-family);
+    font-style: normal;
+}
+
+.cometchat-user-details__content-description {
+    overflow: hidden;
+    color: var(--cometchat-text-color-secondary, #727272);
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: var(--cometchat-font-caption1-regular, 400 12px Roboto);
+}
+
+.cometchat-user-details__content-action-item {
+    display: flex;
+    padding: var(--cometchat-padding-3, 12px) var(--cometchat-padding-5, 20px);
+    align-items: center;
+    gap: var(--cometchat-padding-3, 12px);
+    align-self: stretch;
+    cursor: pointer;
+    justify-content: center;
+}
+
+.cometchat-user-details__content-action-item-icon {
+    background: var(--cometchat-error-color, #f44649);
+    -webkit-mask-size: contain;
+    width: 24px;
+    height: 24px;
+    transition: all 0.3s ease;
+}
+
+.cometchat-user-details__content-action-item-disabled {
+    cursor: default;
+    pointer-events: none;
+}
+
+.cometchat-user-details__content-action-item-disabled .cometchat-user-details__content-action-item-icon {
+    background: var(--cometchat-text-color-disabled, #dcdcdc);
+}
+
+.cometchat-user-details__content-action-item-disabled .cometchat-user-details__content-action-item-text {
+    color: var(--cometchat-text-color-disabled, #dcdcdc);
+}
+
+/* user avtar profile style start  */
+.cometchat-user-details__container {
+    background-color: #130c1e; /* Oppai Dragon dark background */
+    color: #ffffff;
+    padding: 16px 16px 16px 0px; /* NO LEFT PADDING */
+    border-radius: 12px;
+    font-family: "Segoe UI", sans-serif;
+    box-sizing: border-box;
+}
+
+.cometchat-user-details__header-text {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ce2a42;
+}
+
+/* .cometchat-user-details__header-icon {
+    width: 24px;
+    height: 24px;
+    background-color: #CE2A42;
+    mask: url('https://icon-library.com/images/close-icon-png/close-icon-png-29.jpg') center/contain no-repeat;
+    cursor: pointer;
+  } */
+
+.cometchat-user-details__content-description {
+    font-size: 1rem;
+    color: #bbbbbb;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.cometchat-user-details__content-description.offline {
+    color: var(--primary-accent);
+}
+.cometchat-user-details__content-description.online {
+    color: var(--secondary-accent);
+}
+
+.cometchat-user-details__user-info-wrap {
+    @apply w-full gap-y-[28px] flex flex-col items-center;
+}
+
+.pwa-cometchat-user-details-wrap {
+    @apply w-full gap-y-[5px] flex flex-col items-center;
+}
+
+/* user avtar profile style end  */
+
+/* user profile bio text style start */
+
+.cometchat-user-details__btn-wrap {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    width: 100%;
+    row-gap: 16px;
+    justify-content: space-between;
+    margin-top: 40px;
+    /* padding-inline: 16px; */
+}
+.cometchat-user-details__btn-wrap > * {
+    width: 100%;
+    max-width: calc(50% - 8px);
+}
+.cometchat-user-details__btn-wrap .oppai-dragon-comet-chat-user-actions {
+    max-width: 100%;
+}
+.cometchat-user-details__btn-wrap button,
+.cometchat-user-details__btn-wrap a {
+    font: var(--cometchat-font-caption1-regular, 400 12px Roboto);
+    display: inline-flex;
+    align-items: center;
+    color: #fff;
+    padding: 8px 24px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    height: 50px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    text-align: center;
+    justify-content: center;
+}
+
+.cometchat-user-details__btn-wrap button {
+    background-color: var(--cometchat-border-color-highlight);
+}
+.cometchat-user-details__btn-wrap button:hover {
+    background-color: var(--cometchat-extended-primary-color-700);
+}
+
+.cometchat-user-details__account-link {
+    background-color: var(--primary-accent);
+}
+
+.cometchat-user-details__account-link:hover {
+    background-color: #a91f33;
+}
+
+.cometchat-user-details__content-action {
+    width: 100%;
+    border-top: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+    border-bottom: 1px solid var(--cometchat-border-color-light, #f5f5f5);
+    transition: all 0.3s ease;
+}
+
+.cometchat-user-details__content-action:hover {
+    background-color: var(--primary-accent);
+}
+.cometchat-user-details__content-action-item-text {
+    color: var(--cometchat-error-color, #f44649);
+    font: var(--cometchat-font-heading4-regular, 400 16px Roboto);
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+.cometchat-user-details__content-action:hover .cometchat-user-details__content-action-item-text {
+    color: var(--cometchat-fab-button-icon);
+}
+
+.cometchat-user-details__content-action:hover .cometchat-user-details__content-action-item-icon {
+    background-color: var(--cometchat-fab-button-icon);
+}
+
+.bio-other-actions__btn-wrap,
+.bio-other-actions__btn-wrap button {
+    @apply flex w-full cursor-pointer items-center justify-start border-none text-left font-poppins text-sm font-bold text-white no-underline transition-colors duration-300 ease-in-out;
+}
+
+.bio_action {
+    @apply flex items-center gap-3 w-full max-w-full py-[6px] px-[10px] rounded-xl;
+}
+
+.bio_action img {
+    @apply w-14 h-14 object-contain mr-[11px];
+}
+
+.bio-other-actions__btn-wrap button {
+    @apply w-full max-w-[calc(100%-56px-11px)];
+}
+
+.bio_action.gift_action {
+    background-color: #750717;
+}
+.bio_action.ban_action {
+    background-color: #5217ba;
+}
+.bio_action.share_action {
+    background-color: #381d67;
+}
+
+/* user profile bio text style end */
+
+/* START RESPONSIVE DESIGN CODE */
+@media screen and (max-width: 1366px) {
+    .cometchat-user-details__btn-wrap button,
+    .cometchat-user-details__btn-wrap a {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+}
+@media screen and (max-width: 991px) {
+    .cometchat-user-details__btn-wrap > * {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+/* END RESPONSIVE DESIGN CODE */

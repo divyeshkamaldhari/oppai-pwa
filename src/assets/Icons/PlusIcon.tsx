@@ -1,0 +1,18 @@
+import React from "react";
+
+import { MyIconProps } from "./interface";
+
+const PlusIcon: React.FC<MyIconProps> = (props) => {
+    return (
+        <svg fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg" {...props}>
+            <path
+                clipRule="evenodd"
+                d="M11 9H16C16.5523 9 17 9.44772 17 10C17 10.5523 16.5523 11 16 11H11V16C11 16.5523 10.5523 17 10 17C9.44772 17 9 16.5523 9 16V11H4C3.44772 11 3 10.5523 3 10C3 9.44772 3.44772 9 4 9H9V4C9 3.44772 9.44772 3 10 3C10.5523 3 11 3.44772 11 4V9Z"
+                fill="#BCBFC2"
+                fillRule="evenodd"
+            />
+        </svg>
+    );
+};
+
+export default PlusIcon;

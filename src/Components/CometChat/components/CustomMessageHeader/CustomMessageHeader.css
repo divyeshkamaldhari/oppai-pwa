@@ -1,0 +1,79 @@
+/* Custom Message Header Styles */
+.custom-message-header {
+    @apply flex w-full min-h-[73px] items-center justify-between bg-[#291250] py-4 px-[16px];
+}
+
+.custom-message-header__left {
+    @apply flex items-center flex-none cursor-pointer;
+}
+
+.custom-message-header__logo {
+    @apply h-[39px] w-24 object-contain;
+}
+
+.custom-message-header__logo:hover {
+    opacity: 0.8;
+}
+
+.custom-message-header__center {
+    @apply flex flex-col items-start justify-center flex-1 text-left p-0 min-w-0;
+}
+
+.custom-message-header__name {
+    @apply font-poppins text-lg font-semibold text-[#ffffff] m-0 overflow-hidden text-ellipsis whitespace-nowrap max-w-full cursor-pointer leading-[1.2];
+}
+
+.custom-message-header__last-active {
+    @apply text-xs text-[#959595] overflow-hidden text-ellipsis whitespace-nowrap max-w-full cursor-pointer font-medium;
+}
+
+.custom-message-header__right {
+    @apply flex items-center gap-[9px] shrink-0 w-full px-4 py-3;
+}
+
+.custom-message-header__avatar {
+    display: flex;
+    align-items: center;
+}
+
+.custom-message-header__avatar .cometchat-avatar,
+.custom-message-header__avatar .cometchat-avatar__image,
+.custom-message-header__avatar .cometchat-avatar__text {
+    @apply w-[39px] h-[39px] cursor-pointer;
+}
+
+.custom-message-header__avatar .cometchat-avatar__image {
+    @apply object-cover;
+}
+
+.custom-message-header__menu {
+    display: flex;
+    align-items: center;
+}
+
+.custom-message-header__menu .cometchat-header__info {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    -webkit-mask: url("../../assets/infoIcon.svg") center center no-repeat;
+    background: var(--cometchat-icon-color-primary, #141414);
+    -webkit-mask-size: contain;
+    transition: background-color 0.2s ease;
+}
+
+.custom-message-header__menu .cometchat-header__info:hover {
+    background: var(--cometchat-icon-color-highlight, #6852d6);
+}
+
+/* Mobile responsive adjustments */
+
+/* Ensure the custom header fits within the wrapper */
+.cometchat-header-wrapper .custom-message-header {
+    width: 100%;
+    height: 100%;
+}
+
+/* Hide default CometChat header when using custom header */
+/* .cometchat-header-wrapper .cometchat-message-header {
+    display: none;
+} */
