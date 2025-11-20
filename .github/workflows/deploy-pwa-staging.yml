@@ -134,7 +134,7 @@ name: Build & Deploy PWA (staging/production)
 
 on:
   push:
-    branches: [staging, production]
+    branches: [staging] #, production]
   workflow_dispatch:
 
 defaults:
@@ -145,10 +145,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      HOST: ${{ secrets.HOSTINGER_HOST }}
-      USER: ${{ secrets.HOSTINGER_USER }}
-      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }}
-      DEFAULT_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+      HOST: ${{ secrets.HOSTINGER_HOST }} # same for both staging and production
+      USER: ${{ secrets.HOSTINGER_USER }} # same for both staging and production
+      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }} # same for both staging and production
+      DEFAULT_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }} # same for both staging and production
 
     steps:
       - name: Checkout repository
