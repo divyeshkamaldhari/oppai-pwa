@@ -1,29 +1,155 @@
-name: Deploy PWA to Hostinger (staging) — with .env from secret
+# name: Deploy PWA to Hostinger (staging) — with .env from secret
+
+# on:
+#   push:
+#     branches: [staging]
+#   workflow_dispatch:
+
+# jobs:
+#   build-and-deploy-pwa:
+#     runs-on: ubuntu-latest
+
+#     env:
+#       HOST: ${{ secrets.HOSTINGER_HOST }} # 109.106.254.234
+#       USER: ${{ secrets.HOSTINGER_USER }} # u689060721
+#       KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }}
+#       PORT_SECRET: "65002"
+
+#       # PWA will be copied to this remote folder
+#       # TARGET_BUILD_PATH: /home/u689060721/domains/lightsteelblue-dolphin-977863.hostingersite.com/public_html/wp-content/themes/brook-child/dist
+#       TARGET_BUILD_PATH: ${{ secrets.HOSTINGER_STAGING_TARGET_PATH }}
+#       # Base64-encoded .env (preferred: store as a secret)
+#       # Put the base64 single-line of your .env into repo secret PWA_ENV_B64
+#       # If you used repository variables, workflow will fallback to vars.PWA_ENV_B64
+#       # (but secrets are strongly recommended)
+#       PWA_ENV_B64_SECRET: ${{ secrets.PWA_ENV_B64 }}
+#       PWA_ENV_B64_VAR: ${{ vars.PWA_ENV_B64 }}
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+
+#       - name: Ensure repo is present (debug)
+#         run: |
+#           echo "Repo root:"
+#           ls -lah
+#       - name: Resolve & decode .env (from secret → fallback var)
+#         run: |
+#           set -euo pipefail
+#           # prefer secret
+#           ENV_B64="${{ secrets.PWA_ENV_B64 }}"
+#           if [ -z "$ENV_B64" ]; then
+#             echo "Secret PWA_ENV_B64 not found; checking repository variable PWA_ENV_B64..."
+#             ENV_B64="${{ vars.PWA_ENV_B64 }}"
+#           fi
+#           if [ -z "$ENV_B64" ]; then
+#             echo "ERROR: No PWA_ENV_B64 provided (secret or repo variable). If .env is optional, remove this check."
+#             exit 1
+#           fi
+#           # sanitize CRs
+#           CLEAN_ENV_B64=$(printf '%s' "$ENV_B64" | tr -d '\r')
+#           # safe sanity checks (length + hash), do NOT print decoded content
+#           echo "Decoded .env base64 length: $(printf '%s' "$CLEAN_ENV_B64" | wc -c) bytes"
+#           printf '%s' "$CLEAN_ENV_B64" | sha256sum | awk '{print "PWA_ENV_B64 sha256:", $1}'
+#           # validate basic base64 charset
+#           if ! printf '%s' "$CLEAN_ENV_B64" | grep -Eq '^[A-Za-z0-9+/]+={0,2}$'; then
+#             echo "ERROR: PWA_ENV_B64 contains invalid base64 characters. Recreate with: cat .env | base64 | tr -d '\\n'"
+#             exit 1
+#           fi
+#           # decode to .env in repo root (overwrite if exists)
+#           printf '%s' "$CLEAN_ENV_B64" | base64 --decode > .env
+#           chmod 600 .env
+#           echo ".env file written (not printed)."
+#         shell: bash
+
+#       - name: Setup Node.js 21
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: "21"
+#           cache: "npm"
+
+#       - name: Install dependencies (uses .env)
+#         run: |
+#           # ensure .env exists before install/build if your build uses env vars at install time
+#           test -f .env || (echo ".env missing; aborting" && exit 1)
+#           npm ci
+#         shell: bash
+
+#       - name: Build PWA (uses .env)
+#         run: |
+#           CI=false npm run build
+#           echo "Build complete. Checking output:"
+#           ls -lah ./dist || (echo "dist/ not found" && exit 1)
+#         shell: bash
+
+#       - name: Validate secrets & compute SSH port
+#         run: |
+#           if [ -z "${{ secrets.HOSTINGER_SSH_KEY }}" ]; then
+#             echo "ERROR: HOSTINGER_SSH_KEY secret missing"
+#             exit 1
+#           fi
+#           PORT="${PORT_SECRET:-65002}"
+#           echo "SSH_PORT=$PORT" >> $GITHUB_ENV
+#         shell: bash
+
+#       - name: Load SSH key & known_hosts
+#         run: |
+#           set -euo pipefail
+#           mkdir -p ~/.ssh
+#           CLEAN_B64=$(printf '%s' "${{ secrets.HOSTINGER_SSH_KEY }}" | tr -d '\r')
+#           printf '%s' "$CLEAN_B64" | base64 --decode > ~/.ssh/id_rsa
+#           chmod 600 ~/.ssh/id_rsa
+#           eval "$(ssh-agent -s)"
+#           ssh-add ~/.ssh/id_rsa
+#           ssh-keyscan -p "$SSH_PORT" -H "$HOST" >> ~/.ssh/known_hosts || true
+#         shell: bash
+
+#       - name: Ensure remote target directory exists
+#         run: |
+#           ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "$USER@$HOST" "mkdir -p '$TARGET_BUILD_PATH' && echo 'remote path ensured: $TARGET_BUILD_PATH'"
+#         shell: bash
+
+#       - name: Rsync dist → remote
+#         run: |
+#           RSYNC_SSH="ssh -p $SSH_PORT -o StrictHostKeyChecking=no"
+#           rsync -e "$RSYNC_SSH" -avz --delete ./dist/ "$USER@$HOST:$TARGET_BUILD_PATH/"
+#         shell: bash
+
+#       - name: Cleanup (optional)
+#         run: |
+#           # remove .env from runner after use
+#           shred -u .env || rm -f .env || true
+#           echo "Runner .env removed."
+#         shell: bash
+
+#       - name: Deployment complete
+#         run: |
+#           echo "PWA deployed to $USER@$HOST:$TARGET_BUILD_PATH"
+#         shell: bash
+
+
+name: Build & Deploy PWA (staging/production)
 
 on:
   push:
-    branches: [staging]
+    branches: [staging, production]
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  build-and-deploy-pwa:
+  build:
     runs-on: ubuntu-latest
 
     env:
-      HOST: ${{ secrets.HOSTINGER_HOST }} # 109.106.254.234
-      USER: ${{ secrets.HOSTINGER_USER }} # u689060721
+      HOST: ${{ secrets.HOSTINGER_HOST }}
+      USER: ${{ secrets.HOSTINGER_USER }}
       KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }}
-      PORT_SECRET: "65002"
-
-      # PWA will be copied to this remote folder
-      # TARGET_BUILD_PATH: /home/u689060721/domains/lightsteelblue-dolphin-977863.hostingersite.com/public_html/wp-content/themes/brook-child/dist
-      TARGET_BUILD_PATH: ${{ secrets.HOSTINGER_STAGING_TARGET_PATH }}
-      # Base64-encoded .env (preferred: store as a secret)
-      # Put the base64 single-line of your .env into repo secret PWA_ENV_B64
-      # If you used repository variables, workflow will fallback to vars.PWA_ENV_B64
-      # (but secrets are strongly recommended)
-      PWA_ENV_B64_SECRET: ${{ secrets.PWA_ENV_B64 }}
-      PWA_ENV_B64_VAR: ${{ vars.PWA_ENV_B64 }}
+      PORT_SECRET: ${{ secrets.HOSTINGER_SSH_PORT }}
 
     steps:
       - name: Checkout repository
@@ -31,100 +157,107 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Ensure repo is present (debug)
+      - name: Determine branch-specific paths & secrets
+        id: vars
         run: |
-          echo "Repo root:"
-          ls -lah
-      - name: Resolve & decode .env (from secret → fallback var)
-        run: |
-          set -euo pipefail
-          # prefer secret
-          ENV_B64="${{ secrets.PWA_ENV_B64 }}"
-          if [ -z "$ENV_B64" ]; then
-            echo "Secret PWA_ENV_B64 not found; checking repository variable PWA_ENV_B64..."
-            ENV_B64="${{ vars.PWA_ENV_B64 }}"
-          fi
-          if [ -z "$ENV_B64" ]; then
-            echo "ERROR: No PWA_ENV_B64 provided (secret or repo variable). If .env is optional, remove this check."
-            exit 1
-          fi
-          # sanitize CRs
-          CLEAN_ENV_B64=$(printf '%s' "$ENV_B64" | tr -d '\r')
-          # safe sanity checks (length + hash), do NOT print decoded content
-          echo "Decoded .env base64 length: $(printf '%s' "$CLEAN_ENV_B64" | wc -c) bytes"
-          printf '%s' "$CLEAN_ENV_B64" | sha256sum | awk '{print "PWA_ENV_B64 sha256:", $1}'
-          # validate basic base64 charset
-          if ! printf '%s' "$CLEAN_ENV_B64" | grep -Eq '^[A-Za-z0-9+/]+={0,2}$'; then
-            echo "ERROR: PWA_ENV_B64 contains invalid base64 characters. Recreate with: cat .env | base64 | tr -d '\\n'"
-            exit 1
-          fi
-          # decode to .env in repo root (overwrite if exists)
-          printf '%s' "$CLEAN_ENV_B64" | base64 --decode > .env
-          chmod 600 .env
-          echo ".env file written (not printed)."
-        shell: bash
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
-      - name: Setup Node.js 21
+          if [ "$BRANCH" = "staging" ]; then
+            TARGET_PATH="${{ secrets.HOSTINGER_STAGING_TARGET_PATH }}"
+            PWA_ENV_B64="${{ secrets.PWA_ENV_B64_STAGING }}"
+            SSH_PORT="${{ secrets.HOSTINGER_SSH_PORT_STAGING || secrets.HOSTINGER_SSH_PORT }}"
+          elif [ "$BRANCH" = "production" ]; then
+            TARGET_PATH="${{ secrets.HOSTINGER_PRODUCTION_TARGET_PATH }}"
+            PWA_ENV_B64="${{ secrets.PWA_ENV_B64_PRODUCTION }}"
+            SSH_PORT="${{ secrets.HOSTINGER_SSH_PORT_PRODUCTION || secrets.HOSTINGER_SSH_PORT }}"
+          fi
+
+          echo "target_path=$TARGET_PATH" >> "$GITHUB_OUTPUT"
+          echo "pwa_env_b64=$PWA_ENV_B64" >> "$GITHUB_OUTPUT"
+          echo "ssh_port=${SSH_PORT:-65002}" >> "$GITHUB_OUTPUT"
+
+      - name: Decode .env from secret
+        run: |
+          ENV_B64="${{ steps.vars.outputs.pwa_env_b64 }}"
+          if [ -z "$ENV_B64" ]; then
+            echo "ERROR: Missing branch-specific .env secret!"
+            exit 1
+          fi
+
+          CLEAN_ENV_B64=$(printf '%s' "$ENV_B64" | tr -d '\r')
+
+          printf "%s" "$CLEAN_ENV_B64" | base64 --decode > .env
+          chmod 600 .env
+          echo ".env created."
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "21"
           cache: "npm"
 
-      - name: Install dependencies (uses .env)
-        run: |
-          # ensure .env exists before install/build if your build uses env vars at install time
-          test -f .env || (echo ".env missing; aborting" && exit 1)
-          npm ci
-        shell: bash
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Build PWA (uses .env)
+      - name: Build PWA
         run: |
           CI=false npm run build
-          echo "Build complete. Checking output:"
-          ls -lah ./dist || (echo "dist/ not found" && exit 1)
-        shell: bash
+          ls -lah dist
 
-      - name: Validate secrets & compute SSH port
+      - name: Export variables for deploy
         run: |
-          if [ -z "${{ secrets.HOSTINGER_SSH_KEY }}" ]; then
-            echo "ERROR: HOSTINGER_SSH_KEY secret missing"
-            exit 1
-          fi
-          PORT="${PORT_SECRET:-65002}"
-          echo "SSH_PORT=$PORT" >> $GITHUB_ENV
-        shell: bash
+          echo "TARGET_BUILD_PATH=${{ steps.vars.outputs.target_path }}" >> $GITHUB_ENV
+          echo "SSH_PORT=${{ steps.vars.outputs.ssh_port }}" >> $GITHUB_ENV
+          echo "BRANCH_NAME=${{ steps.vars.outputs.branch }}" >> $GITHUB_ENV
 
-      - name: Load SSH key & known_hosts
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ env.BRANCH_NAME }}
+          path: dist
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      HOST: ${{ secrets.HOSTINGER_HOST }}
+      USER: ${{ secrets.HOSTINGER_USER }}
+      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ env.BRANCH_NAME }}
+          path: dist
+
+      - name: Setup SSH
         run: |
-          set -euo pipefail
           mkdir -p ~/.ssh
-          CLEAN_B64=$(printf '%s' "${{ secrets.HOSTINGER_SSH_KEY }}" | tr -d '\r')
-          printf '%s' "$CLEAN_B64" | base64 --decode > ~/.ssh/id_rsa
+          printf '%s' "${KEY_B64}" | base64 --decode > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -p "$SSH_PORT" -H "$HOST" >> ~/.ssh/known_hosts || true
-        shell: bash
 
-      - name: Ensure remote target directory exists
+      - name: Ensure target directory exists
         run: |
-          ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "$USER@$HOST" "mkdir -p '$TARGET_BUILD_PATH' && echo 'remote path ensured: $TARGET_BUILD_PATH'"
-        shell: bash
+          ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "$USER@$HOST" \
+            "mkdir -p '$TARGET_BUILD_PATH' && echo 'Ensured: $TARGET_BUILD_PATH'"
 
       - name: Rsync dist → remote
         run: |
-          RSYNC_SSH="ssh -p $SSH_PORT -o StrictHostKeyChecking=no"
-          rsync -e "$RSYNC_SSH" -avz --delete ./dist/ "$USER@$HOST:$TARGET_BUILD_PATH/"
-        shell: bash
+          rsync -e "ssh -p $SSH_PORT -o StrictHostKeyChecking=no" \
+            -avz --delete dist/ "$USER@$HOST:$TARGET_BUILD_PATH/"
 
-      - name: Cleanup (optional)
+      - name: Cleanup runner
         run: |
-          # remove .env from runner after use
-          shred -u .env || rm -f .env || true
-          echo "Runner .env removed."
-        shell: bash
+          shred -u .env || true
 
       - name: Deployment complete
         run: |
-          echo "PWA deployed to $USER@$HOST:$TARGET_BUILD_PATH"
-        shell: bash
+          echo "Deployment complete → $USER@$HOST:$TARGET_BUILD_PATH"
