@@ -1,0 +1,99 @@
+name: Deploy PWA to Hostinger (staging)
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy-pwa:
+    runs-on: ubuntu-latest
+
+    env:
+      HOST: 109.106.254.234
+      USER: u689060721
+      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }}
+      PORT_SECRET: "65002"
+
+      # FINAL PWA DEPLOY PATH (themes/brook-child)
+      TARGET_BUILD_PATH: /home/u689060721/domains/lightsteelblue-dolphin-977863.hostingersite.com/public_html/wp-content/themes/brook-child/dist
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: List repo files
+        run: |
+          echo "Repo root:"
+          ls -lah
+
+      - name: Setup Node.js 21
+        uses: actions/setup-node@v4
+        with:
+          node-version: "21"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          npm i
+        shell: bash
+
+      - name: Build PWA
+        run: |
+          CI=false npm run build
+          echo "Checking dist folder:"
+          ls -lah ./dist || echo "dist folder missing!"
+        shell: bash
+
+      - name: Validate secrets & compute SSH port
+        run: |
+          if [ -z "$KEY_B64" ]; then
+            echo "ERROR: HOSTINGER_SSH_KEY missing"
+            exit 1
+          fi
+          PORT="${PORT_SECRET:-65002}"
+          echo "SSH_PORT=$PORT" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Load SSH key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          CLEAN_B64=$(printf '%s' "$KEY_B64" | tr -d '\r')
+
+          printf '%s' "$CLEAN_B64" | base64 --decode > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
+
+          ssh-keyscan -p "$SSH_PORT" -H "$HOST" >> ~/.ssh/known_hosts || true
+        shell: bash
+
+      - name: Ensure remote target directory exists
+        run: |
+          ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "$USER@$HOST" \
+            "mkdir -p '$TARGET_BUILD_PATH' && echo 'Remote path OK'"
+        shell: bash
+
+      - name: Rsync dist → remote brook-child theme
+        run: |
+          SOURCE_DIST="./dist/"
+          if [ ! -d "$SOURCE_DIST" ]; then
+            echo "dist folder not found — stopping."
+            exit 1
+          fi
+
+          RSYNC_SSH="ssh -p $SSH_PORT -o StrictHostKeyChecking=no"
+          rsync -e "$RSYNC_SSH" -avz --delete \
+            "$SOURCE_DIST" "$USER@$HOST:$TARGET_BUILD_PATH/"
+        shell: bash
+
+      - name: Deployment Complete
+        run: |
+          echo "PWA deployed to:"
+          echo "$USER@$HOST:$TARGET_BUILD_PATH"
+          echo "Pipeline Passed."
+        shell: bash
