@@ -23,7 +23,7 @@ jobs:
       # If you used repository variables, workflow will fallback to vars.PWA_ENV_B64
       # (but secrets are strongly recommended)
       PWA_ENV_B64_SECRET: ${{ secrets.PWA_ENV_B64_STAGING }}
-      PWA_ENV_B64_VAR: ${{ vars.PWA_ENV_B64 }}
+      # PWA_ENV_B64_VAR: ${{ vars.PWA_ENV_B64 }}
 
     steps:
       - name: Checkout repository
