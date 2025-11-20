@@ -135,148 +135,88 @@
 #           echo "PWA deployed to $USER@$HOST:$TARGET_BUILD_PATH"
 #         shell: bash
 
-name: Deploy PWA to Hostinger (staging + production)
+name: Deploy PWA — Staging
 
 on:
   push:
-    branches: 
-      - staging
-      - production
+    branches: [staging]
   workflow_dispatch:
 
 jobs:
-
-  # ============================
-  # 👇 STAGING DEPLOYMENT JOB
-  # ============================
-  deploy-staging:
-    if: github.ref == 'refs/heads/staging'
+  build-and-deploy-pwa-staging:
     runs-on: ubuntu-latest
 
     env:
-      HOST: ${{ secrets.HOSTINGER_HOST_STAGING }}
-      USER: ${{ secrets.HOSTINGER_USER_STAGING }}
-      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY_STAGING }}
-      TARGET_BUILD_PATH: ${{ secrets.HOSTINGER_STAGING_TARGET_PATH }}
+      HOST: ${{ secrets.HOSTINGER_HOST_STAGING }}                # staging host (e.g. 109.106.254.234)
+      USER: ${{ secrets.HOSTINGER_USER_STAGING }}                # staging user (e.g. u689060721)
+      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY_STAGING }}          # base64 private key for staging
       PORT_SECRET: "65002"
-
-      # Staging .env file
-      PWA_ENV_B64_SECRET: ${{ secrets.PWA_ENV_B64_STAGING }}
+      TARGET_BUILD_PATH: ${{ secrets.HOSTINGER_STAGING_TARGET_PATH }}  # remote staging path
+      PWA_ENV_B64: ${{ secrets.PWA_ENV_B64_STAGING }}            # base64 .env for staging
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Decode staging .env
+      - name: Decode .env (staging)
         run: |
-          ENV_B64="${{ secrets.PWA_ENV_B64_STAGING }}"
-          CLEAN=$(printf '%s' "$ENV_B64" | tr -d '\r')
-          printf '%s' "$CLEAN" | base64 --decode > .env
+          set -euo pipefail
+          if [ -z "${PWA_ENV_B64}" ]; then
+            echo "ERROR: PWA_ENV_B64 (staging) secret missing"
+            exit 1
+          fi
+          printf '%s' "${PWA_ENV_B64}" | tr -d '\r' | base64 --decode > .env
           chmod 600 .env
         shell: bash
 
-      - name: Setup Node.js 21
+      - name: Setup Node 21
         uses: actions/setup-node@v4
         with:
           node-version: "21"
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          test -f .env || (echo ".env missing; aborting" && exit 1)
+          npm ci
+        shell: bash
 
       - name: Build PWA
         run: |
           CI=false npm run build
-          ls -lah ./dist
+          ls -lah ./dist || (echo "dist not found" && exit 1)
         shell: bash
 
-      - name: Load SSH key
+      - name: Load SSH key (staging)
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
-          printf '%s' "$KEY_B64" | tr -d '\r' | base64 --decode > ~/.ssh/id_rsa
+          CLEAN_B64=$(printf '%s' "$KEY_B64" | tr -d '\r')
+          printf '%s' "$CLEAN_B64" | base64 --decode > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
-          ssh-keyscan -p 65002 -H "$HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${PORT_SECRET}" -H "$HOST" >> ~/.ssh/known_hosts || true
+          echo "SSH key loaded."
         shell: bash
 
       - name: Ensure staging directory exists
-        run: ssh -p 65002 "$USER@$HOST" "mkdir -p '$TARGET_BUILD_PATH'"
-        shell: bash
-
-      - name: Upload dist → staging
         run: |
-          RSYNC_SSH="ssh -p 65002 -o StrictHostKeyChecking=no"
-          rsync -e "$RSYNC_SSH" -avz --delete ./dist/ "$USER@$HOST:$TARGET_BUILD_PATH/"
+          ssh -p "${PORT_SECRET}" -o StrictHostKeyChecking=no "${USER}@${HOST}" "mkdir -p '${TARGET_BUILD_PATH}'"
         shell: bash
 
-      - name: Completed Staging Deploy
-        run: echo "Staging deployment completed successfully."
-
-  # ============================
-  # 👇 PRODUCTION DEPLOYMENT JOB
-  # ============================
-  deploy-production:
-    if: github.ref == 'refs/heads/production'
-    runs-on: ubuntu-latest
-
-    env:
-      HOST: ${{ secrets.HOSTINGER_HOST_PROD }}
-      USER: ${{ secrets.HOSTINGER_USER_PROD }}
-      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY_PROD }}
-      TARGET_BUILD_PATH: ${{ secrets.HOSTINGER_PROD_TARGET_PATH }}
-      PORT_SECRET: "65002"
-
-      # Production .env file
-      PWA_ENV_B64_SECRET: ${{ secrets.PWA_ENV_B64_PROD }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Decode production .env
+      - name: Rsync dist → staging
         run: |
-          ENV_B64="${{ secrets.PWA_ENV_B64_PROD }}"
-          CLEAN=$(printf '%s' "$ENV_B64" | tr -d '\r')
-          printf '%s' "$CLEAN" | base64 --decode > .env
-          chmod 600 .env
+          RSYNC_SSH="ssh -p ${PORT_SECRET} -o StrictHostKeyChecking=no"
+          rsync -e "$RSYNC_SSH" -avz --delete ./dist/ "${USER}@${HOST}:${TARGET_BUILD_PATH}/"
         shell: bash
 
-      - name: Setup Node.js 21
-        uses: actions/setup-node@v4
-        with:
-          node-version: "21"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build PWA
+      - name: Cleanup .env
         run: |
-          CI=false npm run build
-          ls -lah ./dist
+          shred -u .env || rm -f .env || true
         shell: bash
 
-      - name: Load SSH key
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s' "$KEY_B64" | tr -d '\r' | base64 --decode > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_rsa
-          ssh-keyscan -p 65002 -H "$HOST" >> ~/.ssh/known_hosts
-        shell: bash
-
-      - name: Ensure production directory exists
-        run: ssh -p 65002 "$USER@$HOST" "mkdir -p '$TARGET_BUILD_PATH'"
-        shell: bash
-
-      - name: Upload dist → production
-        run: |
-          RSYNC_SSH="ssh -p 65002 -o StrictHostKeyChecking=no"
-          rsync -e "$RSYNC_SSH" -avz --delete ./dist/ "$USER@$HOST:$TARGET_BUILD_PATH/"
-        shell: bash
-
-      - name: Completed Production Deploy
-        run: echo "Production deployment completed successfully."
-
+      - name: Staging deployment complete
+        run: echo "Staging deploy completed."
