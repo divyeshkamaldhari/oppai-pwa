@@ -142,14 +142,13 @@ defaults:
     shell: bash
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
     env:
       HOST: ${{ secrets.HOSTINGER_HOST }}
       USER: ${{ secrets.HOSTINGER_USER }}
       KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }}
-      PORT_SECRET: ${{ secrets.HOSTINGER_SSH_PORT }}
+      DEFAULT_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
 
     steps:
       - name: Checkout repository
@@ -166,11 +165,14 @@ jobs:
           if [ "$BRANCH" = "staging" ]; then
             TARGET_PATH="${{ secrets.HOSTINGER_STAGING_TARGET_PATH }}"
             PWA_ENV_B64="${{ secrets.PWA_ENV_B64_STAGING }}"
-            SSH_PORT="${{ secrets.HOSTINGER_SSH_PORT_STAGING || secrets.HOSTINGER_SSH_PORT }}"
+            SSH_PORT="${{ secrets.HOSTINGER_SSH_PORT_STAGING || secrets.DEFAULT_SSH_PORT || secrets.HOSTINGER_SSH_PORT }}"
           elif [ "$BRANCH" = "production" ]; then
             TARGET_PATH="${{ secrets.HOSTINGER_PRODUCTION_TARGET_PATH }}"
             PWA_ENV_B64="${{ secrets.PWA_ENV_B64_PRODUCTION }}"
-            SSH_PORT="${{ secrets.HOSTINGER_SSH_PORT_PRODUCTION || secrets.HOSTINGER_SSH_PORT }}"
+            SSH_PORT="${{ secrets.HOSTINGER_SSH_PORT_PRODUCTION || secrets.DEFAULT_SSH_PORT || secrets.HOSTINGER_SSH_PORT }}"
+          else
+            echo "ERROR: unsupported branch: $BRANCH"
+            exit 1
           fi
 
           echo "target_path=$TARGET_PATH" >> "$GITHUB_OUTPUT"
@@ -184,10 +186,12 @@ jobs:
             echo "ERROR: Missing branch-specific .env secret!"
             exit 1
           fi
-
           CLEAN_ENV_B64=$(printf '%s' "$ENV_B64" | tr -d '\r')
-
-          printf "%s" "$CLEAN_ENV_B64" | base64 --decode > .env
+          if ! printf '%s' "$CLEAN_ENV_B64" | grep -Eq '^[A-Za-z0-9+/]+={0,2}$'; then
+            echo "ERROR: PWA_ENV_B64 contains invalid base64 characters."
+            exit 1
+          fi
+          printf '%s' "$CLEAN_ENV_B64" | base64 --decode > .env
           chmod 600 .env
           echo ".env created."
 
@@ -198,66 +202,51 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          test -f .env || (echo ".env missing; aborting" && exit 1)
+          npm ci
 
       - name: Build PWA
         run: |
           CI=false npm run build
-          ls -lah dist
+          ls -lah dist || (echo "dist/ not found" && exit 1)
 
-      - name: Export variables for deploy
-        run: |
-          echo "TARGET_BUILD_PATH=${{ steps.vars.outputs.target_path }}" >> $GITHUB_ENV
-          echo "SSH_PORT=${{ steps.vars.outputs.ssh_port }}" >> $GITHUB_ENV
-          echo "BRANCH_NAME=${{ steps.vars.outputs.branch }}" >> $GITHUB_ENV
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-${{ env.BRANCH_NAME }}
-          path: dist
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    env:
-      HOST: ${{ secrets.HOSTINGER_HOST }}
-      USER: ${{ secrets.HOSTINGER_USER }}
-      KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download dist artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist-${{ env.BRANCH_NAME }}
-          path: dist
-
-      - name: Setup SSH
+      - name: Prepare SSH key & known_hosts
         run: |
           mkdir -p ~/.ssh
-          printf '%s' "${KEY_B64}" | base64 --decode > ~/.ssh/id_rsa
+          CLEAN_B64=$(printf '%s' "${{ env.KEY_B64 }}" | tr -d '\r')
+          printf '%s' "$CLEAN_B64" | base64 --decode > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
-          ssh-keyscan -p "$SSH_PORT" -H "$HOST" >> ~/.ssh/known_hosts || true
+          SSH_PORT="${{ steps.vars.outputs.ssh_port }}"
+          # ensure host is known for given port
+          ssh-keyscan -p "$SSH_PORT" -H "${{ env.HOST }}" >> ~/.ssh/known_hosts || true
+          echo "SSH prepared (port=$SSH_PORT)."
 
-      - name: Ensure target directory exists
+      - name: Ensure remote target directory exists
         run: |
-          ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "$USER@$HOST" \
-            "mkdir -p '$TARGET_BUILD_PATH' && echo 'Ensured: $TARGET_BUILD_PATH'"
+          SSH_PORT="${{ steps.vars.outputs.ssh_port }}"
+          TARGET="${{ steps.vars.outputs.target_path }}"
+          if [ -z "$TARGET" ]; then
+            echo "ERROR: TARGET_BUILD_PATH is empty; did you set HOSTINGER_*_TARGET_PATH secrets?"
+            exit 1
+          fi
+          ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "${{ env.USER }}@${{ env.HOST }}" \
+            "mkdir -p '$TARGET' && echo 'Ensured: $TARGET'"
 
-      - name: Rsync dist → remote
+      - name: Rsync dist → remote (deploy)
         run: |
-          rsync -e "ssh -p $SSH_PORT -o StrictHostKeyChecking=no" \
-            -avz --delete dist/ "$USER@$HOST:$TARGET_BUILD_PATH/"
+          SSH_PORT="${{ steps.vars.outputs.ssh_port }}"
+          TARGET="${{ steps.vars.outputs.target_path }}"
+          RSYNC_SSH="ssh -p $SSH_PORT -o StrictHostKeyChecking=no"
+          rsync -e "$RSYNC_SSH" -avz --delete ./dist/ "${{ env.USER }}@${{ env.HOST }}:$TARGET/"
 
       - name: Cleanup runner
         run: |
-          shred -u .env || true
+          shred -u .env || rm -f .env || true
+          rm -f ~/.ssh/id_rsa || true
 
       - name: Deployment complete
         run: |
-          echo "Deployment complete → $USER@$HOST:$TARGET_BUILD_PATH"
+          echo "PWA deployed to ${{ env.USER }}@${{ env.HOST }}:${{ steps.vars.outputs.target_path }} (branch: ${{ steps.vars.outputs.branch }})"
