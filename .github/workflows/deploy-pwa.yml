@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      HOST: 109.106.254.234
-      USER: u689060721
+      HOST: ${{ secrets.HOSTINGER_HOST }} # 109.106.254.234
+      USER: ${{ secrets.HOSTINGER_USER }} # u689060721
       KEY_B64: ${{ secrets.HOSTINGER_SSH_KEY }}
       PORT_SECRET: "65002"
 
       # PWA will be copied to this remote folder
-      TARGET_BUILD_PATH: /home/u689060721/domains/lightsteelblue-dolphin-977863.hostingersite.com/public_html/wp-content/themes/brook-child/dist
-
+      # TARGET_BUILD_PATH: /home/u689060721/domains/lightsteelblue-dolphin-977863.hostingersite.com/public_html/wp-content/themes/brook-child/dist
+      TARGET_BUILD_PATH: ${{ secrets.HOSTINGER_STAGING_TARGET_PATH }}
       # Base64-encoded .env (preferred: store as a secret)
       # Put the base64 single-line of your .env into repo secret PWA_ENV_B64
       # If you used repository variables, workflow will fallback to vars.PWA_ENV_B64
